@@ -92,6 +92,7 @@ public class PingWorker {
         long start = System.currentTimeMillis();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(service.url))
+                .header("User-Agent", "PulsePing-Monitor/1.0")
                 .GET()
                 .build();
 

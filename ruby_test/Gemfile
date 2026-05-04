@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+ruby '3.2.2'
+
+# No external gems required for this base setup as we use built-in libraries
+# but the Gemfile is required for Render to detect it as a Ruby project.

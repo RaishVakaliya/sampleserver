@@ -1,0 +1,1 @@
+worker: go run go-worker/ping_worker.go

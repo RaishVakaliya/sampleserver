@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -48,7 +49,7 @@ func (pw *PingWorker) Ping(service Service) {
 		Timeout: 10 * time.Second,
 	}
 
-	resp, err := http.Get(service.URL)
+	resp, err := client.Get(service.URL)
 	latency := time.Since(start)
 
 	result := PingResult{
@@ -100,9 +101,30 @@ func main() {
 	services := []Service{
 		{ID: "api-gateway", Name: "API Gateway", URL: "https://api.github.com", Interval: 5 * time.Minute},
 		{ID: "web-frontend", Name: "Web Frontend", URL: "https://google.com", Interval: 15 * time.Minute},
-		{ID: "auth-service", Name: "Auth Service", URL: "https://invalid-url-test.com", Interval: 1 * time.Minute},
 	}
 
 	worker := NewPingWorker(services)
-	worker.Run()
+	
+	// Start the pinging logic in a background goroutine
+	go worker.Run()
+
+	// Start a simple HTTP server to satisfy Render's Web Service requirement
+	port := "8080" // Default port
+	if p := os.Getenv("PORT"); p != "" {
+		port = p
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "PulsePing Worker is alive and monitoring %d services!", len(services))
+	})
+
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	fmt.Printf("🌍 Web server started on port %s\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		fmt.Printf("Error starting server: %v\n", err)
+	}
 }
